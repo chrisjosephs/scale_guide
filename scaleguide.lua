@@ -1,12 +1,12 @@
 -- @description Microtonal Scale Guide Generator (EDO-based)
--- @version 0.1
--- @author GPT
+-- @version 0.2
+-- @author Christopher Josephs with help from GPT
 -- @about Creates ghost note guides for microtonal scales using ReaImGui
 -- @provides
 --   [main] . > Microtonal Scale Guide Generator.lua
 -- @requires js_ReaImGui, SWS Extension
 
-local ctx = reaper.ImGui_CreateContext('Microtonal Scale Guide Generator', reaper.ImGui_ConfigFlags_AlwaysAutoResize())
+local ctx = reaper.ImGui_CreateContext('Microtonal Scale Guide Generator', reaper.ImGui_ConfigFlags_AlwaysAutoResize)
 local visible = true
 local edo = 12
 local step_input = "0, 2, 4, 5, 7, 9, 11"
@@ -33,8 +33,7 @@ end
 local function save_scales()
   local f = io.open(scale_file, "w")
   if f then
-    f:write("return \
-")
+    f:write("return \\\n")
     f:write(reaper.serialize(scale_presets))
     f:close()
   end
@@ -65,7 +64,7 @@ local function parse_steps(input)
   return steps
 end
 
-local function create_guide_notes(edo, steps, root, octaves, duration)
+local function create_guide_notes(edo, steps, root, octaves, duration, scale_name)
   reaper.Undo_BeginBlock()
 
   local track = reaper.GetSelectedTrack(0, 0)
@@ -75,6 +74,16 @@ local function create_guide_notes(edo, steps, root, octaves, duration)
   end
 
   local item = reaper.CreateNewMIDIItemInProj(track, 0, duration, false)
+
+  -- Sanitize scale name before naming the item
+  local function sanitize_name(name)
+    -- Replace illegal characters for item names with underscores
+    return name:gsub('[\\/:%*%"%?%<%>%|]', '_')
+  end
+  local safe_name = sanitize_name(scale_name)
+  if safe_name == '' then safe_name = 'Scale Guide' end
+  reaper.GetSetMediaItemInfo_String(item, 'P_NAME', safe_name, true)
+
   local take = reaper.GetMediaItemTake(item, 0)
   local ppq_start = reaper.MIDI_GetPPQPosFromProjTime(take, 0)
   local ppq_end = reaper.MIDI_GetPPQPosFromProjTime(take, duration)
@@ -110,7 +119,7 @@ function loop()
 
   if reaper.ImGui_Button(ctx, "Generate Guide Notes") then
     local steps = parse_steps(step_input)
-    create_guide_notes(edo, steps, root_note, num_octaves, duration_seconds)
+    create_guide_notes(edo, steps, root_note, num_octaves, duration_seconds, scale_name)
   end
 
   reaper.ImGui_Separator(ctx)
