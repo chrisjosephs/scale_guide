@@ -1,7 +1,7 @@
 # Microtonal Scale Guide Generator for REAPER
 
-**Author:** Christopher Josephs (crimzonclotta) / with help from GPT
-**Version:** 0.1  
+**Author:** Christopher Josephs (crimzonclotta) / with help from GPT  
+**Version:** 0.11  
 **Requirements:**  
 - REAPER (with SWS Extension)  
 - [`js_ReaImGui`](https://github.com/cfillion/reaimgui) (install from ReaPack)
