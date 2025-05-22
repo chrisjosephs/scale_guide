@@ -91,7 +91,7 @@ local function create_guide_notes(edo, steps, root, octaves, duration, scale_nam
 
   for octave = 0, octaves - 1 do
     for _, step in ipairs(steps) do
-      local note = root + math.floor((octave * edo + step) * 12 / edo + 0.5)
+      local note = root + octave * edo + step
       if note > 127 then
         -- stop generating notes when exceeding MIDI max note number
         break
