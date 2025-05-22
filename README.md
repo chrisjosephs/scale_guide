@@ -64,17 +64,14 @@ You can:
 
 ## 📌 Limitations
 
-- Guide notes are rounded to nearest 12-TET MIDI note — they are **visual only** (not true microtonal playback).
-- No support (yet) for pitch bend tuning or actual playback of fractional notes.
-- REAPER currently does **not allow custom row greying or hiding** in the MIDI editor.
-
+- REAPER currently does **not allow custom row greying or hiding** in the MIDI editor.  That and that snap to key tool is limited to 12 tone is hence the creation of this plugin to instead layer ghost notes.
 ---
 
 ## 🛠 Future Features (Planned)
 - `.scl` and `.tun` file import support
 - Chords
 - Modes
-- Folders to organise / scale / [ mode || chord]
+- Folders to organise / scale / [ mode || chord] heirarchicaly as per how they can be organised in the Snap to Key Tool
 - Step names, colors, or dynamic key changes
 - Auto-update when switching keys
 
