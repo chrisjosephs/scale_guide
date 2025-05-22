@@ -1,6 +1,6 @@
 # Microtonal Scale Guide Generator for REAPER
 
-**Author:** Christopher Josephs / with help from GPT
+**Author:** Christopher Josephs (crimzonclotta) / with help from GPT
 **Version:** 0.1  
 **Requirements:**  
 - REAPER (with SWS Extension)  
@@ -72,7 +72,9 @@ You can:
 
 ## 🛠 Future Features (Planned)
 - `.scl` and `.tun` file import support
-- True pitch bend microtonal playback
+- Chords
+- Modes
+- Folders to organise / scale / [ mode || chord]
 - Step names, colors, or dynamic key changes
 - Auto-update when switching keys
 
