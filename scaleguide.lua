@@ -10,8 +10,8 @@ local ctx = reaper.ImGui_CreateContext('Microtonal Scale Guide Generator', reape
 local visible = true
 local edo = 12
 local step_input = "0, 2, 4, 5, 7, 9, 11"
-local root_note = 60
-local num_octaves = 5
+local root_note = 0
+local num_octaves = 10
 local duration_seconds = 20 * 60
 local scale_name = ""
 local scale_presets = {}
@@ -58,7 +58,8 @@ end
 
 local function parse_steps(input)
   local steps = {}
-  for s in input:gmatch("%d+") do
+  -- match numbers optionally surrounded by spaces, separated by commas or just spaces
+  for s in input:gmatch("(%d+)") do
     table.insert(steps, tonumber(s))
   end
   return steps
