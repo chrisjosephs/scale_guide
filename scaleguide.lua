@@ -92,7 +92,16 @@ local function create_guide_notes(edo, steps, root, octaves, duration, scale_nam
   for octave = 0, octaves - 1 do
     for _, step in ipairs(steps) do
       local note = root + math.floor((octave * edo + step) * 12 / edo + 0.5)
+      if note > 127 then
+        -- stop generating notes when exceeding MIDI max note number
+        break
+      end
       reaper.MIDI_InsertNote(take, false, false, ppq_start, ppq_end, 0, note, 100, false)
+    end
+    -- also stop the outer loop if next octave would exceed 127 on its lowest step
+    local next_octave_lowest_note = root + math.floor(((octave + 1) * edo + steps[1]) * 12 / edo + 0.5)
+    if next_octave_lowest_note > 127 then
+      break
     end
   end
 
@@ -114,7 +123,7 @@ function loop()
   end
 
   _, edo = reaper.ImGui_InputInt(ctx, "EDO (equal divisions of octave)", edo)
-  _, step_input = reaper.ImGui_InputText(ctx, "Scale steps (comma-separated)", step_input)
+  _, step_input = reaper.ImGui_InputText(ctx, "Scale steps (comma or space-`separated)", step_input)
   _, root_note = reaper.ImGui_InputInt(ctx, "Root MIDI note (e.g. 60 = C4)", root_note)
   _, num_octaves = reaper.ImGui_InputInt(ctx, "Number of octaves", num_octaves)
 
