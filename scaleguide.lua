@@ -99,7 +99,7 @@ local function create_guide_notes(edo, steps, root, octaves, duration, scale_nam
       reaper.MIDI_InsertNote(take, false, false, ppq_start, ppq_end, 0, note, 100, false)
     end
     -- also stop the outer loop if next octave would exceed 127 on its lowest step
-    local next_octave_lowest_note = root + math.floor(((octave + 1) * edo + steps[1]) * 12 / edo + 0.5)
+    local next_octave_lowest_note = root + math.floor(((octave + 1) * edo + steps[1]) * edo / edo + 0.5)
     if next_octave_lowest_note > 127 then
       break
     end
