@@ -1,7 +1,7 @@
 # Microtonal Scale Guide Generator for REAPER
 
 **Author:** Christopher Josephs (crimzonclotta) / with help from GPT  
-**Version:** 0.11  
+**Version:** 0.12 
 **Requirements:**  
 - REAPER (with SWS Extension)  
 - [`js_ReaImGui`](https://github.com/cfillion/reaimgui) (install from ReaPack)
@@ -13,7 +13,7 @@
 This script helps you **visually guide microtonal composition** in REAPER by generating **ghost MIDI notes** that represent a custom scale in any EDO (Equal Divisions of the Octave).
 
 Use it to:
-- Design microtonal scales with arbitrary EDOs (e.g., 24-EDO, 31-EDO, 53-EDO)
+- Design microtonal scales with arbitrary octave divisions (e.g., 24-EDO, 31-EDO, 53-EDO) or non-EDO 
 - Save and reload custom scale definitions
 - Generate long guide notes as a visual overlay ("ghost notes") in the MIDI editor
 - Assist microtonal MIDI editing using REAPER’s source ghosting feature
