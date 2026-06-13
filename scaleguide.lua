@@ -1,4 +1,4 @@
--- @description Microtonal Scale Guide Generator (EDO-based)
+-- @description Microtonal Scale Guide Generator (EDO or non-EDO)
 -- @version 0.2
 -- @author Christopher Josephs with help from GPT
 -- @about Creates ghost note guides for microtonal scales using ReaImGui
@@ -8,7 +8,7 @@
 
 local ctx = reaper.ImGui_CreateContext('Microtonal Scale Guide Generator', reaper.ImGui_ConfigFlags_AlwaysAutoResize)
 local visible = true
-local edo = 12
+local divisions = 12
 local step_input = "0, 2, 4, 5, 7, 9, 11"
 local root_note = 0
 local num_octaves = 10
@@ -16,28 +16,7 @@ local duration_seconds = 20 * 60
 local scale_name = ""
 local scale_presets = {}
 local scale_file = reaper.GetResourcePath() .. "/MicrotonalScales.lua"
-
--- Load scale presets
-local function load_scales()
-  local f = io.open(scale_file, "r")
-  if f then
-    local chunk = f:read("*a")
-    f:close()
-    local ok, loaded = pcall(load("return " .. chunk))
-    if ok and type(loaded) == "table" then
-      scale_presets = loaded
-    end
-  end
-end
-
-local function save_scales()
-  local f = io.open(scale_file, "w")
-  if f then
-    f:write("return \\\n")
-    f:write(reaper.serialize(scale_presets))
-    f:close()
-  end
-end
+local selected_scale_idx = 0
 
 -- Serialize helper
 function reaper.serialize(t)
@@ -56,6 +35,37 @@ function reaper.serialize(t)
   return table.concat(parts, "\n")
 end
 
+-- Load scale presets
+local function load_scales()
+  local f = io.open(scale_file, "r")
+  if f then
+    local chunk = f:read("*a")
+    f:close()
+    local ok, loaded = pcall(load(chunk))
+    if ok and type(loaded) == "table" then
+      scale_presets = loaded
+    end
+  end
+end
+
+local function save_scales()
+  local f = io.open(scale_file, "w")
+  if f then
+    f:write("return ")
+    f:write(reaper.serialize(scale_presets))
+    f:close()
+  end
+end
+
+local function get_scale_names()
+  local names = {}
+  for k in pairs(scale_presets) do
+    table.insert(names, k)
+  end
+  table.sort(names)
+  return names
+end
+
 local function parse_steps(input)
   local steps = {}
   -- match numbers optionally surrounded by spaces, separated by commas or just spaces
@@ -65,7 +75,7 @@ local function parse_steps(input)
   return steps
 end
 
-local function create_guide_notes(edo, steps, root, octaves, duration, scale_name)
+local function create_guide_notes(divisions, steps, root, octaves, duration, scale_name)
   reaper.Undo_BeginBlock()
 
   local track = reaper.GetSelectedTrack(0, 0)
@@ -91,7 +101,7 @@ local function create_guide_notes(edo, steps, root, octaves, duration, scale_nam
 
   for octave = 0, octaves - 1 do
     for _, step in ipairs(steps) do
-      local note = root + octave * edo + step
+      local note = root + octave * divisions + step
       if note > 127 then
         -- stop generating notes when exceeding MIDI max note number
         break
@@ -99,7 +109,7 @@ local function create_guide_notes(edo, steps, root, octaves, duration, scale_nam
       reaper.MIDI_InsertNote(take, false, false, ppq_start, ppq_end, 0, note, 100, false)
     end
     -- also stop the outer loop if next octave would exceed 127 on its lowest step
-    local next_octave_lowest_note = root + math.floor(((octave + 1) * edo + steps[1]) * edo / edo + 0.5)
+    local next_octave_lowest_note = root + math.floor(((octave + 1) * divisions + steps[1]) * divisions / divisions + 0.5)
     if next_octave_lowest_note > 127 then
       break
     end
@@ -122,29 +132,49 @@ function loop()
     return
   end
 
-  _, edo = reaper.ImGui_InputInt(ctx, "EDO (equal divisions of octave)", edo)
+  _, divisions = reaper.ImGui_InputInt(ctx, "Octave divisions (tuning resolution)", divisions)
   _, step_input = reaper.ImGui_InputText(ctx, "Scale steps (comma or space-`separated)", step_input)
   _, root_note = reaper.ImGui_InputInt(ctx, "Root MIDI note (e.g. 60 = C4)", root_note)
   _, num_octaves = reaper.ImGui_InputInt(ctx, "Number of octaves", num_octaves)
 
   if reaper.ImGui_Button(ctx, "Generate Guide Notes") then
     local steps = parse_steps(step_input)
-    create_guide_notes(edo, steps, root_note, num_octaves, duration_seconds, scale_name)
+    create_guide_notes(divisions, steps, root_note, num_octaves, duration_seconds, scale_name)
   end
 
   reaper.ImGui_Separator(ctx)
 
   _, scale_name = reaper.ImGui_InputText(ctx, "Scale Name", scale_name)
   if reaper.ImGui_Button(ctx, "Save Scale") and scale_name ~= "" then
-    scale_presets[scale_name] = { edo = edo, steps = parse_steps(step_input) }
+    scale_presets[scale_name] = { divisions = divisions, steps = parse_steps(step_input) }
     save_scales()
   end
 
-  reaper.ImGui_SameLine(ctx)
-  if reaper.ImGui_Button(ctx, "Load Scale") and scale_presets[scale_name] then
-    local preset = scale_presets[scale_name]
-    edo = preset.edo
-    step_input = table.concat(preset.steps, ", ")
+  local names = get_scale_names()
+  if #names > 0 then
+    local combo_items = table.concat(names, "\0") .. "\0"
+    if selected_scale_idx >= #names then selected_scale_idx = 0 end
+
+    local rv2, new_idx = reaper.ImGui_Combo(ctx, "Saved Scales", selected_scale_idx, combo_items)
+    if rv2 then
+      selected_scale_idx = new_idx
+      scale_name = names[selected_scale_idx + 1]
+    end
+
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_Button(ctx, "Load") and scale_presets[scale_name] then
+      local preset = scale_presets[scale_name]
+      divisions = preset.divisions
+      step_input = table.concat(preset.steps, ", ")
+    end
+
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_Button(ctx, "Delete") and scale_presets[scale_name] then
+      scale_presets[scale_name] = nil
+      save_scales()
+      selected_scale_idx = 0
+      scale_name = ""
+    end
   end
 
   reaper.ImGui_End(ctx)
